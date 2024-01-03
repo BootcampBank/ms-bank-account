@@ -1,0 +1,360 @@
+openapi: 3.0.1
+info:
+  title: Bank - Client Management
+  description: Client Management Microservice. API reactive
+  termsOfService: http://swagger.io/terms/
+  contact:
+    name: Leonardo Anccana Muñoz
+    email: lanccana@nttdata.com
+  version: 1.0.0
+externalDocs:
+  description: Local Server
+  url: http://localhost:8090
+servers:
+  - url: 'http://localhost:8093'
+    description: Local test server
+
+paths:
+  /accounts/passive:
+    get:
+      tags:
+        - Get Account List
+      parameters:
+        - name: type
+          in: query
+          description: The type of passive account.
+          required: true
+          schema:
+            type: string
+            enum:
+              - savings
+              - checking
+              - fixed_term_savings
+      summary: Get list of passive accounts
+      description: Get the list of passive accounts filtered by type
+      operationId: getPassiveAccounts
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PassiveAccountDto'
+    post:
+      tags:
+        - Create Account
+      summary: Create new passive account
+      description: Create new passive account for a client.
+      operationId: createPassiveAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PassiveAccountCreationDto'
+      responses:
+        201:
+          description: New account created.
+        400:
+          description: Bad request. Check the request body.
+        500:
+          description: Account not created. Internal server error.
+
+  /accounts/passive/{accountCode}:
+    parameters:
+      - name: accountCode
+        required: true
+        description: The account number
+        in: path
+        schema:
+          type: string
+          minLength: 15
+          maxLength: 15
+    get:
+      tags:
+        - Get Account By Id
+      summary: Get a single passive accounts
+      description: Get a single passive account by accountId.
+      operationId: getPassiveAccountByAccountCode
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassiveAccountDto'
+        404:
+          description: No account found with the provided account code.
+    put:
+      tags:
+        - Modify Account
+      summary: Modify a passive account
+      description: Modify a passive account for a client.
+      operationId: modifyPassiveAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PassiveAccountCreationDto'
+      responses:
+        200:
+          description: Account modified.
+        404:
+          description: No account found with the provided account code. Cannot update.
+        500:
+          description: Error while trying to update the account.
+    delete:
+      tags:
+        - Delete Account
+      summary: Delete a passive account
+      description: Mark a passive account as deleted.
+      operationId: deletePassiveAccount
+      responses:
+        204:
+          description: Account deleted.
+        404:
+          description: No account found with the provided account code. Cannot delete.
+        500:
+          description: Error while trying to delete the account.
+
+  /accounts/asset:
+    get:
+      tags:
+        - Get Account List
+      parameters:
+        - name: type
+          in: query
+          description: The type of asset account
+          required: true
+          schema:
+            type: string
+            enum:
+              - regular_account
+              - corporate_account
+              - credit_card_account
+      summary: Get list of asset accounts
+      description: Get the list of asset accounts filtered by type
+      operationId: getAssetAccounts
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetAccountDto'
+    post:
+      tags:
+        - Create Account
+      summary: Create new asset account
+      description: Create new asset account for a client.
+      operationId: createAssetAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetAccountCreationDto'
+      responses:
+        201:
+          description: New account created.
+        400:
+          description: Bad request. Check the request body.
+        500:
+          description: Account not created. Internal server error.
+
+  /accounts/asset/{accountCode}:
+    parameters:
+      - name: accountCode
+        required: true
+        description: The account number
+        in: path
+        schema:
+          type: string
+          minLength: 15
+          maxLength: 15
+    get:
+      tags:
+        - Get Account By Id
+      summary: Get a single asset account
+      description: Get a single asset account by account code.
+      operationId: getAssetAccountByAccountCode
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetAccountDto'
+        404:
+          description: No account found with the provided account code.
+    put:
+      tags:
+        - Modify Account
+      summary: Modify an asset account
+      description: Modify an asset account for a client.
+      operationId: modifyAssetAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetAccountCreationDto'
+      responses:
+        200:
+          description: Account modified.
+        404:
+          description: No account found with the provided account code. Cannot update.
+        500:
+          description: Error while trying to update the account.
+    delete:
+      tags:
+        - Delete Account
+      summary: Delete an asset account
+      description: Mark an asset account as deleted.
+      operationId: deleteAssetAccount
+      responses:
+        204:
+          description: Account deleted. #TODO: add more status codes
+        404:
+          description: No account found with the provided account code. Cannot delete.
+        500:
+          description: Error while trying to delete the account.
+
+  /accounts/{clientId}:
+    parameters:
+      - name: clientId
+        description: the Id card or legal Id of the client.
+        in: path
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Get Account List
+      summary: Get accounts for client
+      description: Composed list of accounts for the specified client.
+      operationId: getAccountsByClientId
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListForUserDto'
+
+components:
+  schemas:
+    PassiveAccountDto:
+      type: object
+      description: Return a single instance of a type of account that represents expenses for the bank.
+      properties:
+        accountCode:
+          description: A 14 digit account number
+          type: string
+        balance:
+          type: number
+          format: double
+        clientId:
+          description: The ID card or Legal Id number of the client.
+          type: string
+          format: uuid
+        passiveAccountType:
+          description: The type of this passive account.
+          type: string
+          enum:
+            - savings_account
+            - checking_account
+            - fixed_term_savings_account
+        createdAt:
+          description: Datetime of the creation (with zone)
+          type: string
+          format: date-time
+          example: 2023-09-21T17:32:28Z
+
+    PassiveAccountCreationDto:
+      type: object
+      description: Create a new passive account.
+      required:
+        - balance
+        - clientId
+        - passiveAccountType
+      properties:
+        balance:
+          type: number
+          format: double
+        clientId:
+          description: The ID card or Legal Id number of the client.
+          type: string
+          format: uuid
+        passiveAccountType:
+          type: string
+          description: The type of this passive account.
+          enum:
+            - savings_account
+            - checking_account
+            - fixed_term_savings_account
+
+    AssetAccountDto:
+      type: object
+      description: A type of account that represents earnings for the bank.
+      properties:
+        accountCode:
+          description: A 14 digit number of account.
+          type: string
+        balance:
+          type: number
+          format: double
+        clientId:
+          description: The ID card or Legal Id number of the client.
+          type: string
+          format: uuid
+        assetAccountType:
+          description: The asset account type
+          type: string
+          enum:
+            - loan_account
+            - credit_card_account
+        createdAt:
+          description: Datetime of the creation (with zone)
+          type: string
+          format: date-time
+          example: 2023-09-21T17:32:28Z
+
+
+    AssetAccountCreationDto:
+      type: object
+      description: A type of account that represents earnings for the bank.
+      required:
+        - balance
+        - clientId
+        - assetAccountType
+      properties:
+        balance:
+          type: number
+          format: double
+        clientId:
+          description: The ID card or Legal Id number of the client.
+          type: string
+          format: uuid
+        assetAccountType:
+          description: The type of asset account.
+          type: string
+          enum:
+            - loan_account
+            - credit_card_account
+
+    AccountListForUserDto:
+      type: object
+      properties:
+        passiveAccounts:
+          description: List of passive accounts
+          type: array
+          items:
+            $ref: '#/components/schemas/PassiveAccountDto'
+        assetAccounts:
+          description: List of asset accounts
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetAccountDto'
+
